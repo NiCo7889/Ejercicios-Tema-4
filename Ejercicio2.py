@@ -7,64 +7,96 @@ estrella de la muerte, para facilitar esta tarea nos encomienda desarrollar las 
 - si la misión es de baja prioridad se asignarán los recursos de la siguiente manera dependiendo de su tipo:
    * exploración: 15 Scout Troopers y 2 speeder bike, 
    * contención: 30 Stormtroopers y tres vehículos aleatorios (AT-AT, AT-RT, AT-TE, AT-DP, AT-ST) pueden ser repetidos,
-   * ataque: 50 Stormtroopers y siete vehículos aleatorios (a los anteriores se le suman AT-M6, AT-MP, AT-DT),
+   * ataque: 50 Stormtroopers y siete vehículos aleatorios (a los anteriores se le suman AT-M6, AT-MP, AT-DT)
 - realizar la atención de todas las misiones y mostrar los recursos asignados a cada una, permitiendo agregar nuevos pedidos de misiones durante la atención;
 - indicar la cantidad total de recursos asignados a las misiones.
 """
 
+
 import random
 
+
+class Vehiculo:
+    def __init__(self, tipo):
+        self.tipo = tipo
+
+
+class Stormtrooper:
+    def __init__(self, tipo):
+        self.tipo = tipo
+
+
 class Mision:
-    def __init__(self, tipo, destino, general):
+    def __init__(self, tipo, destino, general, prioridad):
         self.tipo = tipo
         self.destino = destino
         self.general = general
-        self.alta_prioridad = general in ['Palpatine', 'Darth Vader']
-        self.recursos = {'Stormtroopers': 0, 'Scout Troopers': 0, 'vehiculos': []}
+        self.prioridad = prioridad if general not in ['Palpatine', 'Darth Vader'] else 'baja'
+        self.vehiculos = []
+        self.stormtroopers = []
 
-    def asignar_recursos(self):
-        if not self.alta_prioridad:
-            vehiculos = ['AT-AT', 'AT-RT', 'AT-TE', 'AT-DP', 'AT-ST', 'AT-M6', 'AT-MP', 'AT-DT']
-            if self.tipo == 'exploracion':
-                self.recursos['Scout Troopers'] = 15
-                self.recursos['vehiculos'] = ['speeder bike'] * 2
-            elif self.tipo == 'contencion':
-                self.recursos['Stormtroopers'] = 30
-                self.recursos['vehiculos'] = random.choices(vehiculos[:5], k=3)
-            elif self.tipo == 'ataque':
-                self.recursos['Stormtroopers'] = 50
-                self.recursos['vehiculos'] = random.choices(vehiculos, k=7)
 
-class AdministradorMisiones:
+class EstrellaMuerte:
     def __init__(self):
         self.misiones = []
-        self.recursos_totales = {'Stormtroopers': 0, 'Scout Troopers': 0, 'vehiculos': 0}
-
-    def agregar_mision(self, tipo, destino, general):
-        mision = Mision(tipo, destino, general)
-        mision.asignar_recursos()
+        self.vehiculos = [Vehiculo(tipo) for tipo in ["AT-AT", "AT-RT", "AT-TE", "AT-DP", "AT-ST", "AT-M6", "AT-MP", "AT-DT"] for _ in range(50)]
+        self.stormtroopers = [Stormtrooper('Scout Trooper') for _ in range(200)] + [Stormtrooper('Stormtrooper') for _ in range(2000)]
+    
+    def agregar_mision(self, mision):
         self.misiones.append(mision)
-        self.actualizar_recursos(mision.recursos)
+    
+    def asignar_recursos(self):
+        for mision in self.misiones:
+            if mision.prioridad == 'alta':
+                continue
+            if mision.tipo == 'exploracion':
+                mision.stormtroopers = [self.stormtroopers.pop(self.stormtroopers.index(st)) for st in self.stormtroopers if st.tipo == 'Scout Trooper'][:15]
+                mision.vehiculos = [self.vehiculos.pop(self.vehiculos.index(vh)) for vh in self.vehiculos if vh.tipo == 'speeder bike'][:2]
+            elif mision.tipo == 'contencion':
+                mision.stormtroopers = [self.stormtroopers.pop(self.stormtroopers.index(st)) for st in self.stormtroopers if st.tipo == 'Stormtrooper'][:30]
+                mision.vehiculos = random.sample(self.vehiculos, 3)
+                for vh in mision.vehiculos:
+                    self.vehiculos.remove(vh)
+            elif mision.tipo == 'ataque':
+                mision.stormtroopers = [self.stormtroopers.pop(self.stormtroopers.index(st)) for st in self.stormtroopers if st.tipo == 'Stormtrooper'][:50]
+                mision.vehiculos = random.sample(self.vehiculos, 7)
+                for vh in mision.vehiculos:
+                    self.vehiculos.remove(vh)
 
-    def actualizar_recursos(self, recursos):
-        for key in recursos:
-            if key in ['Stormtroopers', 'Scout Troopers']:
-                self.recursos_totales[key] += recursos[key]
-            else:
-                self.recursos_totales['vehiculos'] += len(recursos[key])
-
-    def mostrar_recursos(self):
-        for i, mision in enumerate(self.misiones):
-            print(f'Misión {i + 1}: {mision.tipo} en {mision.destino} solicitada por {mision.general}')
-            print('Recursos asignados:', mision.recursos)
+    def mostrar_recursos_misiones(self):
+        for mision in self.misiones:
+            print(f"Misión {mision.tipo} a {mision.destino} solicitada por {mision.general} con prioridad {mision.prioridad}.")
+            print(f"Asignados {len(mision.stormtroopers)} stormtroopers y {len(mision.vehiculos)} vehiculos.")
+            print("Vehiculos asignados:")
+            for vehiculo in mision.vehiculos:
+                print(f"- {vehiculo.tipo}")
             print()
-        print('Recursos totales asignados:', self.recursos_totales)
+
+    def recursos_totales_asignados(self):
+        total_stormtroopers = sum([len(mision.stormtroopers) for mision in self.misiones])
+        total_vehiculos = sum([len(mision.vehiculos) for mision in self.misiones])
+        print(f"Total de stormtroopers asignados: {total_stormtroopers}")
+        print(f"Total de vehículos asignados: {total_vehiculos}")
 
 
-administrador = AdministradorMisiones()
+# Crear una instancia de la Estrella de la Muerte
+estrella_muerte = EstrellaMuerte()
 
-administrador.agregar_mision('exploracion', 'Tatooine', 'General Hux')
-administrador.agregar_mision('contencion', 'Endor', 'Darth Vader')
-administrador.agregar_mision('ataque', 'Hoth', 'Palpatine')
+# Crear algunas misiones
+mision1 = Mision("exploracion", "Tatooine", "General Veers", "alta")
+mision2 = Mision("contencion", "Hoth", "Darth Vader", "media")
+mision3 = Mision("ataque", "Endor", "Palpatine", "baja")
 
-administrador.mostrar_recursos()
+# Agregar las misiones a la Estrella de la Muerte
+estrella_muerte.agregar_mision(mision1)
+estrella_muerte.agregar_mision(mision2)
+estrella_muerte.agregar_mision(mision3)
+
+# Asignar recursos a las misiones
+estrella_muerte.asignar_recursos()
+
+# Mostrar los recursos asignados a cada misión
+estrella_muerte.mostrar_recursos_misiones()
+
+# Mostrar el total de recursos asignados
+estrella_muerte.recursos_totales_asignados()

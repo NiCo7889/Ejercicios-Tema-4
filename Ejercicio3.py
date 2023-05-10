@@ -11,8 +11,10 @@ Se requiere implementar una red de ferrocarriles compuesta de estaciones de tren
     * la estación St. Pancras hasta la estación King's Cross;
 """
 
+
 import heapq
 from typing import List, Tuple, Union
+
 
 class Nodo:
     def __init__(self, nombre: str, tipo: str):
@@ -103,4 +105,3 @@ distancia3 = camino_corto.encontrar_camino(estaciones[4], estaciones[0])
 print("Distancia desde King's Cross hasta Waterloo:", distancia1)
 print("Distancia desde Victoria Train Station hasta Liverpool Street Station:", distancia2)
 print("Distancia desde St. Pancras hasta King's Cross:", distancia3)
-

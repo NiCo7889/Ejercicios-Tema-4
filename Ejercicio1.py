@@ -1,6 +1,7 @@
 """
-Desarrollar los algoritmos necesarios para generar un árbol de Huffman a partir de la siguiente tabla, para lo cual deberá calcular primero las frecuencias de cada carácter 
-a partir de la cantidad de apariciones del mismo, para resolver las siguientes actividades:
+Desarrollar los algoritmos necesarios para generar un árbol de Huffman a partir de la siguiente tabla: frequency = {'A': 11, 'B': 2, 'C': 4, 'D': 3, 'E': 14, 'G': 3, 'I': 6, 'L': 6, 'M': 3, 'N': 6, 'O': 7, 'P': 4, 'Q': 1, 'R': 10, 'S': 4, 'T': 3, 'U': 4, 'V': 2, ' ': 17, ',': 2}. 
+Para lo cual deberá calcular primero las frecuencias de cada carácter a partir de la cantidad de 
+apariciones del mismo, para resolver las siguientes actividades:
 - la generación del árbol debe hacerse desde los caracteres de menor frecuencia hasta los de mayor, en el caso de que dos caracteres tengan la misma frecuencia, primero se 
 toma el que este primero en el alfabeto, el carácter “espacio” y “coma” se consideraran anteúltimo y último respectivamente en el orden alfabético;
 - descomprimir los siguientes mensajes, cuyo árbol ha sido construido de la misma manera que el ejemplo visto anteriormente:
@@ -17,8 +18,10 @@ toma el que este primero en el alfabeto, el carácter “espacio” y “coma”
 - finalmente, calcule el espacio de memoria requerido por el mensaje original y el comprimido.
 """
 
+
 import heapq
 from collections import Counter
+
 
 class Node:
     def __init__(self, char, freq, left=None, right=None):
@@ -84,7 +87,7 @@ class HuffmanTree:
         return ''.join(decoded_message)
 
 # Crear el árbol de Huffman con la tabla dada
-data = "aabc, deeeff"
+data = {'A': 11, 'B': 2, 'C': 4, 'D': 3, 'E': 14, 'G': 3, 'I': 6, 'L': 6, 'M': 3, 'N': 6, 'O': 7, 'P': 4, 'Q': 1, 'R': 10, 'S': 4, 'T': 3, 'U': 4, 'V': 2, ' ': 17, ',': 2}
 huffman_tree = HuffmanTree(data)
 
 # Mensajes comprimidos

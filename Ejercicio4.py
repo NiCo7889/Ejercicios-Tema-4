@@ -2,98 +2,94 @@
 - Desarrollar un algoritmo numérico iterativo que permita calcular el método de la bisección de una función f(x).
 - Desarrollar un algoritmo numérico iterativo que permita calcular el método de la secante de una función f(x).
 - Desarrollar un algoritmo numérico iterativo que permita calcular el método de Newton-Raphson de una función f(x).
-- Comparar los tres algoritmos anteriores para resolver la siguiente función: x3 + x +16 = 0, respecto de la cantidad de iteraciones necesarias por cada método para converger. 
+- Comparar los tres algoritmos anteriores para resolver la siguiente función: x3 + x + 16 = 0, respecto de la cantidad de iteraciones necesarias por cada método para converger. 
 - ¿Cuánto es la diferencia en decimales entre las distintas soluciones?
 """
 
-import math
 
-class MetodoNumerico:
-    def __init__(self, func, tol=1e-6, max_iter=100):
-        self.func = func
+import numpy as np
+from scipy.misc import derivative
+
+# Clase abstracta para los métodos
+class RootFindingMethod:
+    def __init__(self, function, tol=1e-6, max_iter=1000):
+        self.function = function
         self.tol = tol
         self.max_iter = max_iter
 
-    def resolver(self):
+    def find_root(self):
         raise NotImplementedError
 
-
-class Biseccion(MetodoNumerico):
-    def __init__(self, func, a, b, tol=1e-6, max_iter=100):
-        super().__init__(func, tol, max_iter)
+# Método de Bisección
+class BisectionMethod(RootFindingMethod):
+    def __init__(self, function, a, b, tol=1e-6, max_iter=1000):
+        super().__init__(function, tol, max_iter)
         self.a = a
         self.b = b
 
-    def resolver(self):
+    def find_root(self):
         a, b = self.a, self.b
-        for i in range(self.max_iter):
-            c = (a + b) / 2
-            if self.func(c) == 0 or (b - a) / 2 < self.tol:
-                return c, i + 1
-            if self.func(a) * self.func(c) < 0:
-                b = c
-            else:
+        for _ in range(self.max_iter):
+            c = (a + b) / 2.0
+            if self.function(c) == 0 or abs(b - a) < self.tol:
+                return c
+            elif np.sign(self.function(c)) == np.sign(self.function(a)):
                 a = c
-        return None, None
+            else:
+                b = c
+        return c  # Regresa la última estimación si no se encontró la raíz
 
+# Método de Secante
+class SecantMethod(RootFindingMethod):
+    def __init__(self, function, a, b, tol=1e-6, max_iter=1000):
+        super().__init__(function, tol, max_iter)
+        self.a = a
+        self.b = b
 
-class Secante(MetodoNumerico):
-    def __init__(self, func, x0, x1, tol=1e-6, max_iter=100):
-        super().__init__(func, tol, max_iter)
-        self.x0 = x0
-        self.x1 = x1
-
-    def resolver(self):
-        x0, x1 = self.x0, self.x1
-        for i in range(self.max_iter):
-            x2 = x1 - self.func(x1) * (x1 - x0) / (self.func(x1) - self.func(x0))
+    def find_root(self):
+        x0, x1 = self.a, self.b
+        for _ in range(self.max_iter):
+            x2 = x1 - (self.function(x1) * (x1 - x0)) / (self.function(x1) - self.function(x0))
             if abs(x2 - x1) < self.tol:
-                return x2, i + 1
+                return x2
             x0, x1 = x1, x2
-        return None, None
+        return x2
 
-
-class NewtonRaphson(MetodoNumerico):
-    def __init__(self, func, deriv, x0, tol=1e-6, max_iter=100):
-        super().__init__(func, tol, max_iter)
-        self.deriv = deriv
+# Método de Newton-Raphson
+class NewtonMethod(RootFindingMethod):
+    def __init__(self, function, x0, tol=1e-6, max_iter=1000):
+        super().__init__(function, tol, max_iter)
         self.x0 = x0
 
-    def resolver(self):
+    def find_root(self):
         x = self.x0
-        for i in range(self.max_iter):
-            x_new = x - self.func(x) / self.deriv(x)
+        for _ in range(self.max_iter):
+            f_x = self.function(x)
+            f_prime_x = derivative(self.function, x, dx=1e-6)
+            x_new = x - f_x / f_prime_x
             if abs(x_new - x) < self.tol:
-                return x_new, i + 1
+                return x_new
             x = x_new
-        return None, None
+        return x_new
 
+# Función para comparar métodos
+def compare_methods(function, a, b, x0):
+    methods = [BisectionMethod(function, a, b), SecantMethod(function, a, b), NewtonMethod(function, x0)]
+    roots = []
+    for method in methods:
+        root = method.find_root()
+        roots.append(root)
+        print(f"El método {method.__class__.__name__} converge a la raíz {root}.")
 
-def comparar_metodos(f, df, a, b, x0, x1):
-    biseccion = Biseccion(f, a, b).resolver()
-    secante = Secante(f, x0, x1).resolver()
-    newton_raphson = NewtonRaphson(f, df, x0).resolver()
+    # Diferencia en decimales entre las soluciones
+    print("\nDiferencias entre las soluciones:")
+    for i in range(len(roots)):
+        for j in range(i+1, len(roots)):
+            print(f"Diferencia entre {methods[i].__class__.__name__} y {methods[j].__class__.__name__}: {abs(roots[i]-roots[j])}")
 
-    print("Bisección: Raíz = {:.6f}, Iteraciones = {}".format(*biseccion))
-    print("Secante: Raíz = {:.6f}, Iteraciones = {}".format(*secante))
-    print("Newton-Raphson: Raíz = {:.6f}, Iteraciones = {}".format(*newton_raphson))
-
-    diff_bs = abs(biseccion[0] - secante[0])
-    diff_bn = abs(biseccion[0] - newton_raphson[0])
-    diff_sn = abs(secante[0] - newton_raphson[0])
-
-    print("Diferencia en decimales entre Bisección y Secante: {:.10f}".format(diff_bs))
-    print("Diferencia en decimales entre Bisección y Newton-Raphson: {:.10f}".format(diff_bn))
-    print("Diferencia en decimales entre Secante y Newton-Raphson: {:.10f}".format(diff_sn))
-
-def f(x):
+# Función objetivo
+def function(x):
     return x**3 + x + 16
 
-def df(x):
-    return 3*x**2 + 1
-
-a, b = -5, 5
-x0, x1 = -5, 5
-
-comparar_metodos(f, df, a, b, x0, x1)
-
+# Comparar métodos
+compare_methods(function, -10, 10, 1)
